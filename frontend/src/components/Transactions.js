@@ -1,16 +1,33 @@
 import { useState, useEffect } from 'react';
 
+const BASE = process.env.REACT_APP_API_URL || '';
+
 export default function Transactions() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL || ''}/api/vehicles`)
+    fetch(`${BASE}/api/vehicles`)
       .then(res => res.json())
       .then(data => { setVehicles(data); setLoading(false); })
       .catch(() => { setError('Failed to load data.'); setLoading(false); });
   }, []);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this entry?')) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`${BASE}/api/vehicles/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setVehicles(v => v.filter(x => x.id !== id));
+    } catch {
+      alert('Failed to delete. Try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const columns = [
     { key: 'stock', label: 'Stock' },
@@ -48,6 +65,7 @@ export default function Transactions() {
         <table style={styles.table}>
           <thead>
             <tr>
+              <th style={styles.th}>Actions</th>
               {columns.map(col => (
                 <th key={col.key} style={styles.th}>{col.label}</th>
               ))}
@@ -56,6 +74,15 @@ export default function Transactions() {
           <tbody>
             {vehicles.map((v, i) => (
               <tr key={v.id} style={i % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                <td style={styles.td}>
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => handleDelete(v.id)}
+                    disabled={deletingId === v.id}
+                  >
+                    {deletingId === v.id ? '...' : 'Delete'}
+                  </button>
+                </td>
                 {columns.map(col => (
                   <td key={col.key} style={styles.td}>{v[col.key] ?? '—'}</td>
                 ))}
@@ -79,5 +106,10 @@ const styles = {
   td: { padding: '8px 12px', whiteSpace: 'nowrap', color: '#333' },
   rowEven: { background: '#fff' },
   rowOdd: { background: '#f5f5ff' },
-  msg: { color: '#888', padding: 24, textAlign: 'center' }
+  msg: { color: '#888', padding: 24, textAlign: 'center' },
+  deleteBtn: {
+    padding: '4px 10px', background: '#fee2e2', color: '#dc2626',
+    border: '1px solid #fca5a5', borderRadius: 4, cursor: 'pointer',
+    fontSize: 12, fontWeight: 600
+  }
 };
