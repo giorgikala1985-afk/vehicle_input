@@ -57,6 +57,42 @@ router.get('/', async (req, res) => {
   res.json(data);
 });
 
+// PUT /api/vehicles/:id
+router.put('/:id', async (req, res) => {
+  const b = req.body;
+  const { error } = await supabase
+    .from('vehicles')
+    .update({
+      stock:    toNull(b.stock),
+      year:     toNum(b.year),
+      make:     toNull(b.make),
+      model:    toNull(b.model),
+      body:     toNull(b.body),
+      vin:      toNull(b.vin),
+      lot:      toNull(b.lot),
+      auction:  toNull(b.auction),
+      product_type: toNull(b.product_type),
+      auc_won_date:  toNull(b.auc_won_date),
+      payment_due_date: toNull(b.payment_due_date),
+      auction_due: toNull(b.auction_due),
+      storage:  toNum(b.storage),
+      auction_payment_amount: toNum(b.auction_payment_amount),
+      auction_payment_date:   toNull(b.auction_payment_date),
+      customer: toNull(b.customer),
+      customer_payment_date:   toNull(b.customer_payment_date),
+      customer_payment_amount: toNum(b.customer_payment_amount),
+      local_transportation_amount:        toNum(b.local_transportation_amount),
+      local_transportation_due_date:      toNull(b.local_transportation_due_date),
+      local_transportation_payment_date:  toNull(b.local_transportation_payment_date),
+      transportation_sales_amount:        toNum(b.transportation_sales_amount),
+      transportation_sales_due_date:      toNull(b.transportation_sales_due_date)
+    })
+    .eq('id', req.params.id);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true });
+});
+
 // DELETE /api/vehicles/:id
 router.delete('/:id', async (req, res) => {
   const { error } = await supabase
