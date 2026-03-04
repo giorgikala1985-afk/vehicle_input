@@ -95,12 +95,15 @@ router.put('/:id', async (req, res) => {
 
 // DELETE /api/vehicles/:id
 router.delete('/:id', async (req, res) => {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('vehicles')
     .delete()
-    .eq('id', req.params.id);
+    .eq('id', req.params.id)
+    .select();
 
+  console.log('DELETE', req.params.id, { data, error });
   if (error) return res.status(400).json({ error: error.message });
+  if (!data || data.length === 0) return res.status(404).json({ error: 'Row not found or RLS blocked delete' });
   res.json({ success: true });
 });
 

@@ -62,13 +62,18 @@ export default function Transactions() {
     if (!window.confirm(`Delete ${selected.size} selected entry/entries?`)) return;
     setDeleting(true);
     try {
-      await Promise.all([...selected].map(id =>
-        fetch(`${BASE}/api/vehicles/${id}`, { method: 'DELETE' })
+      const results = await Promise.all([...selected].map(id =>
+        fetch(`${BASE}/api/vehicles/${id}`, { method: 'DELETE' }).then(r => ({ id, ok: r.ok }))
       ));
-      setVehicles(v => v.filter(x => !selected.has(x.id)));
-      setSelected(new Set());
+      const deleted = new Set(results.filter(r => r.ok).map(r => r.id));
+      const failed = results.filter(r => !r.ok).length;
+      if (deleted.size > 0) {
+        setVehicles(v => v.filter(x => !deleted.has(x.id)));
+        setSelected(new Set([...selected].filter(id => !deleted.has(id))));
+      }
+      if (failed > 0) alert(`${failed} entry/entries could not be deleted. Try again.`);
     } catch {
-      alert('Failed to delete some entries. Try again.');
+      alert('Failed to delete. Try again.');
     } finally {
       setDeleting(false);
     }
