@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
+const BASE = process.env.REACT_APP_API_URL || '';
 const SECTIONS = [
-  { key: 'makes',  label: 'Makes',  endpoint: '/api/options/makes'  },
-  { key: 'models', label: 'Models', endpoint: '/api/options/models' },
-  { key: 'bodies', label: 'Bodies', endpoint: '/api/options/bodies' },
+  { key: 'makes',  label: 'Makes',  endpoint: `${BASE}/api/options/makes`  },
+  { key: 'models', label: 'Models', endpoint: `${BASE}/api/options/models` },
+  { key: 'bodies', label: 'Bodies', endpoint: `${BASE}/api/options/bodies` },
 ];
 
 function ListManager({ endpoint, label }) {

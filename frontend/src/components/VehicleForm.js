@@ -26,9 +26,10 @@ export default function VehicleForm() {
   const [bodies, setBodies] = useState([]);
 
   useEffect(() => {
-    fetch('/api/options/makes').then(r => r.json()).then(d => setMakes(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch('/api/options/models').then(r => r.json()).then(d => setModels(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch('/api/options/bodies').then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
+    const base = process.env.REACT_APP_API_URL || '';
+    fetch(`${base}/api/options/makes`).then(r => r.json()).then(d => setMakes(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/options/models`).then(r => r.json()).then(d => setModels(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/options/bodies`).then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const handleChange = (e) => {
@@ -40,7 +41,7 @@ export default function VehicleForm() {
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/vehicles', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/vehicles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

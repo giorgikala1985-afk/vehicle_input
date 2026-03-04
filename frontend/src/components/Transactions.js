@@ -6,7 +6,7 @@ export default function Transactions() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('/api/vehicles')
+    fetch(`${process.env.REACT_APP_API_URL || ''}/api/vehicles`)
       .then(res => res.json())
       .then(data => { setVehicles(data); setLoading(false); })
       .catch(() => { setError('Failed to load data.'); setLoading(false); });
