@@ -19,7 +19,16 @@ function ListManager({ endpoint, label }) {
   const [importResult, setImportResult] = useState(null);
   const fileRef = useRef();
 
-  useEffect(() => { load(); }, [endpoint]);
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError('');
+    fetch(endpoint)
+      .then(r => r.json())
+      .then(data => { if (active) setItems(Array.isArray(data) ? data : []); })
+      .catch(() => { if (active) setError('Failed to load.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [endpoint]);
 
   const load = async () => {
     setLoading(true); setError('');
