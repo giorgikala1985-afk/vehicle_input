@@ -2,10 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
 const BASE = process.env.REACT_APP_API_URL || '';
+
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('vehicle_token') || ''}`
+});
+
 const SECTIONS = [
   { key: 'makes',  label: 'Makes',  endpoint: `${BASE}/api/options/makes`  },
   { key: 'models', label: 'Models', endpoint: `${BASE}/api/options/models` },
   { key: 'bodies', label: 'Bodies', endpoint: `${BASE}/api/options/bodies` },
+  { key: 'users',  label: 'Users',  endpoint: null },
 ];
 
 function ListManager({ endpoint, label }) {
@@ -23,7 +30,7 @@ function ListManager({ endpoint, label }) {
   useEffect(() => {
     let active = true;
     setLoading(true); setError('');
-    fetch(endpoint)
+    fetch(endpoint, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { if (active) setItems(Array.isArray(data) ? data : []); })
       .catch(() => { if (active) setError('Failed to load.'); })
@@ -34,7 +41,7 @@ function ListManager({ endpoint, label }) {
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const res = await fetch(endpoint);
+      const res = await fetch(endpoint, { headers: authHeaders() });
       const data = await res.json();
       setItems(Array.isArray(data) ? data : []);
     } catch { setError('Failed to load.'); }
@@ -48,7 +55,7 @@ function ListManager({ endpoint, label }) {
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ name: newName.trim() }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed'); }
@@ -63,7 +70,7 @@ function ListManager({ endpoint, label }) {
     try {
       const res = await fetch(`${endpoint}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ name: editName.trim() }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed'); }
@@ -75,7 +82,7 @@ function ListManager({ endpoint, label }) {
     if (!window.confirm(`Delete this ${label.slice(0, -1).toLowerCase()}?`)) return;
     setError('');
     try {
-      const res = await fetch(`${endpoint}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${endpoint}/${id}`, { method: 'DELETE', headers: authHeaders() });
       if (!res.ok) throw new Error('Failed to delete');
       load();
     } catch (err) { setError(err.message); }
@@ -96,7 +103,7 @@ function ListManager({ endpoint, label }) {
 
       const res = await fetch(`${endpoint}/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ names }),
       });
       const d = await res.json();
@@ -233,6 +240,163 @@ function ListManager({ endpoint, label }) {
   );
 }
 
+const USER_EMPTY = { first_name: '', last_name: '', email: '', phone: '', role: 'member' };
+
+function RoleBadge({ role }) {
+  const isAdmin = role === 'admin';
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+      background: isAdmin ? '#ede9fe' : '#f1f5f9',
+      color: isAdmin ? '#7c3aed' : '#64748b',
+      textTransform: 'uppercase', letterSpacing: '0.04em',
+    }}>{isAdmin ? 'Admin' : 'Member'}</span>
+  );
+}
+
+function UserManager() {
+  const [users, setUsers]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
+  const [form, setForm]       = useState(USER_EMPTY);
+  const [saving, setSaving]   = useState(false);
+  const [editId, setEditId]   = useState(null);
+  const [editForm, setEditForm] = useState(USER_EMPTY);
+
+  const load = async () => {
+    setLoading(true); setError('');
+    try {
+      const res = await fetch(`${BASE}/api/users`, { headers: authHeaders() });
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch { setError('Failed to load users.'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!form.first_name.trim() || !form.email.trim()) { setError('First name and email are required.'); return; }
+    setSaving(true); setError('');
+    try {
+      const res = await fetch(`${BASE}/api/users`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(form),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Failed');
+      setForm(USER_EMPTY); load();
+    } catch (err) { setError(err.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleUpdate = async (id) => {
+    if (!editForm.first_name.trim() || !editForm.email.trim()) { setError('First name and email are required.'); return; }
+    setError('');
+    try {
+      const res = await fetch(`${BASE}/api/users/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(editForm),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Failed');
+      setEditId(null); load();
+    } catch (err) { setError(err.message); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this user?')) return;
+    setError('');
+    try {
+      const res = await fetch(`${BASE}/api/users/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) throw new Error('Failed to delete');
+      load();
+    } catch (err) { setError(err.message); }
+  };
+
+  const roleSelect = (val, onChange) => (
+    <select style={{ ...s.input, flex: 'none', width: '100%' }} value={val} onChange={e => onChange(e.target.value)}>
+      <option value="member">Member</option>
+      <option value="admin">Admin</option>
+    </select>
+  );
+
+  return (
+    <div style={s.card}>
+      <div style={s.cardHeader}>
+        <span style={s.cardTitle}>Users</span>
+        <span style={s.badge}>{users.length} {users.length === 1 ? 'user' : 'users'}</span>
+      </div>
+
+      <form onSubmit={handleAdd} style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+          <input style={s.input} placeholder="First name *" value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} onFocus={e => e.target.style.borderColor='#4f46e5'} onBlur={e => e.target.style.borderColor='#e2e8f0'} />
+          <input style={s.input} placeholder="Last name" value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} onFocus={e => e.target.style.borderColor='#4f46e5'} onBlur={e => e.target.style.borderColor='#e2e8f0'} />
+          <input style={s.input} placeholder="Email *" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} onFocus={e => e.target.style.borderColor='#4f46e5'} onBlur={e => e.target.style.borderColor='#e2e8f0'} />
+          <input style={s.input} placeholder="Phone number" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} onFocus={e => e.target.style.borderColor='#4f46e5'} onBlur={e => e.target.style.borderColor='#e2e8f0'} />
+          <div style={{ gridColumn: '1 / -1' }}>
+            {roleSelect(form.role, v => setForm(f => ({ ...f, role: v })))}
+          </div>
+        </div>
+        <button type="submit" disabled={saving} style={{ ...s.addBtn, background: saving ? '#e2e8f0' : '#4f46e5', color: saving ? '#94a3b8' : '#fff', cursor: saving ? 'not-allowed' : 'pointer' }}>
+          {saving ? 'Adding…' : '+ Add User'}
+        </button>
+      </form>
+
+      {error && <div style={s.errorBox}>{error}</div>}
+
+      {loading ? (
+        <div style={s.empty}>Loading…</div>
+      ) : users.length === 0 ? (
+        <div style={s.empty}>No users yet. Add one above.</div>
+      ) : (
+        <div>
+          {users.map((u, i) => (
+            <div key={u.id} style={{ ...s.row, flexDirection: 'column', alignItems: 'stretch', borderBottom: i < users.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+              {editId === u.id ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <input style={s.input} placeholder="First name *" value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} autoFocus />
+                  <input style={s.input} placeholder="Last name" value={editForm.last_name} onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))} />
+                  <input style={s.input} placeholder="Email *" type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                  <input style={s.input} placeholder="Phone number" value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    {roleSelect(editForm.role, v => setEditForm(f => ({ ...f, role: v })))}
+                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button onClick={() => handleUpdate(u.id)} style={s.saveBtn}>Save</button>
+                    <button onClick={() => setEditId(null)} style={s.cancelBtn}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>{u.first_name} {u.last_name}</span>
+                      <RoleBadge role={u.role} />
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{u.email}{u.phone ? ` · ${u.phone}` : ''}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button onClick={() => { setEditId(u.id); setEditForm({ first_name: u.first_name || '', last_name: u.last_name || '', email: u.email || '', phone: u.phone || '', role: u.role || 'member' }); }} style={s.iconBtn} title="Edit" onMouseEnter={e => e.currentTarget.style.color='#4f46e5'} onMouseLeave={e => e.currentTarget.style.color='#cbd5e1'}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button onClick={() => handleDelete(u.id)} style={s.iconBtn} title="Delete" onMouseEnter={e => e.currentTarget.style.color='#ef4444'} onMouseLeave={e => e.currentTarget.style.color='#cbd5e1'}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OptionsPage() {
   const [activeTab, setActiveTab] = useState('makes');
   const active = SECTIONS.find(s => s.key === activeTab);
@@ -262,7 +426,11 @@ export default function OptionsPage() {
         ))}
       </div>
 
-      {active && <ListManager key={active.key} endpoint={active.endpoint} label={active.label} />}
+      {activeTab === 'users' ? (
+        <UserManager />
+      ) : (
+        active && <ListManager key={active.key} endpoint={active.endpoint} label={active.label} />
+      )}
     </div>
   );
 }

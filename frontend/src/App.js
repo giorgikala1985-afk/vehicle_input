@@ -2,20 +2,37 @@ import { useState } from 'react';
 import VehicleForm from './components/VehicleForm';
 import Transactions from './components/Transactions';
 import OptionsPage from './components/OptionsPage';
+import AuthPage from './components/AuthPage';
 
-const TABS = [
-  { key: 'entry',        label: 'Entry Info' },
-  { key: 'transactions', label: 'Transactions' },
-  { key: 'options',      label: 'Options' },
+const ALL_TABS = [
+  { key: 'entry',        label: 'Entry Info',    adminOnly: false },
+  { key: 'transactions', label: 'Transactions',  adminOnly: false },
+  { key: 'options',      label: 'Options',       adminOnly: true  },
 ];
 
 function App() {
   const [tab, setTab] = useState('entry');
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vehicle_user')); } catch { return null; }
+  });
+
+  const handleLogin = (u) => setUser(u);
+
+  const handleLogout = () => {
+    localStorage.removeItem('vehicle_token');
+    localStorage.removeItem('vehicle_user');
+    setUser(null);
+  };
+
+  if (!user) return <AuthPage onLogin={handleLogin} />;
+
+  const isAdmin = user.role === 'admin';
+  const tabs = ALL_TABS.filter(t => !t.adminOnly || isAdmin);
 
   return (
     <div style={styles.app}>
       <div style={styles.nav}>
-        {TABS.map(t => (
+        {tabs.map(t => (
           <button
             key={t.key}
             style={tab === t.key ? { ...styles.tab, ...styles.tabActive } : styles.tab}
@@ -24,12 +41,16 @@ function App() {
             {t.label}
           </button>
         ))}
+        <div style={styles.userArea}>
+          <span style={styles.userName}>{user.first_name} {user.last_name}</span>
+          <button style={styles.logoutBtn} onClick={handleLogout}>Sign Out</button>
+        </div>
       </div>
 
       <div style={styles.content}>
         {tab === 'entry'        && <VehicleForm />}
         {tab === 'transactions' && <Transactions />}
-        {tab === 'options'      && <OptionsPage />}
+        {tab === 'options'      && isAdmin && <OptionsPage />}
       </div>
     </div>
   );
@@ -58,7 +79,10 @@ const styles = {
     color: '#4f46e5',
     borderBottom: '3px solid #4f46e5'
   },
-  content: { padding: '24px 0' }
+  content: { padding: '24px 0' },
+  userArea: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 },
+  userName: { fontSize: 13, fontWeight: 600, color: '#4f46e5' },
+  logoutBtn: { padding: '6px 14px', border: '1px solid #e0e0e0', borderRadius: 6, background: '#fff', fontSize: 13, fontWeight: 600, color: '#666', cursor: 'pointer' }
 };
 
 export default App;

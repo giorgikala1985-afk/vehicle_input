@@ -12,24 +12,33 @@ const initialState = {
   auc_won_date: '', payment_due_date: '', auction_due: '', storage: '',
   auction_payment_amount: '', auction_payment_date: '',
   customer: '', customer_payment_date: '', customer_payment_amount: '',
+  cash_received: '',
   local_transportation_amount: '', local_transportation_due_date: '',
   local_transportation_payment_date: '',
   transportation_sales_amount: '', transportation_sales_due_date: ''
 };
 
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('vehicle_token') || ''}`
+});
+
 export default function VehicleForm() {
   const [form, setForm] = useState(initialState);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [makes, setMakes]   = useState([]);
-  const [models, setModels] = useState([]);
-  const [bodies, setBodies] = useState([]);
+  const [makes, setMakes]     = useState([]);
+  const [models, setModels]   = useState([]);
+  const [bodies, setBodies]   = useState([]);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     const base = process.env.REACT_APP_API_URL || '';
-    fetch(`${base}/api/options/makes`).then(r => r.json()).then(d => setMakes(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch(`${base}/api/options/models`).then(r => r.json()).then(d => setModels(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch(`${base}/api/options/bodies`).then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
+    const h = { headers: authHeaders() };
+    fetch(`${base}/api/options/makes`, h).then(r => r.json()).then(d => setMakes(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/options/models`, h).then(r => r.json()).then(d => setModels(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/options/bodies`, h).then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/users`, h).then(r => r.json()).then(d => setMembers(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const handleChange = (e) => {
@@ -43,7 +52,7 @@ export default function VehicleForm() {
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/vehicles`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify(form)
       });
       if (!res.ok) throw new Error('Failed to submit');
@@ -136,6 +145,7 @@ export default function VehicleForm() {
             {field('Customer', 'customer', 'text', FaUser)}
             {field('Customer Payment Date', 'customer_payment_date', 'date', FaCalendarCheck)}
             {field('Customer Payment Amount', 'customer_payment_amount', 'number', FaDollarSign)}
+            {dropdown('Cash Received', 'cash_received', ['USA', 'GEORGIA'], FaDollarSign)}
           </Section>
 
           <Section title="Transportation" color="#d97706">
