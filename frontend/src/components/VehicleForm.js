@@ -30,7 +30,6 @@ export default function VehicleForm() {
   const [makes, setMakes]     = useState([]);
   const [models, setModels]   = useState([]);
   const [bodies, setBodies]   = useState([]);
-  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     const base = process.env.REACT_APP_API_URL || '';
@@ -38,7 +37,6 @@ export default function VehicleForm() {
     fetch(`${base}/api/options/makes`, h).then(r => r.json()).then(d => setMakes(Array.isArray(d) ? d : [])).catch(() => {});
     fetch(`${base}/api/options/models`, h).then(r => r.json()).then(d => setModels(Array.isArray(d) ? d : [])).catch(() => {});
     fetch(`${base}/api/options/bodies`, h).then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch(`${base}/api/users`, h).then(r => r.json()).then(d => setMembers(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const handleChange = (e) => {
