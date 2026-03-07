@@ -53,11 +53,15 @@ export default function VehicleForm() {
         headers: authHeaders(),
         body: JSON.stringify(form)
       });
-      if (!res.ok) throw new Error('Failed to submit');
+      if (!res.ok) {
+        let msg = `Server error ${res.status}`;
+        try { const j = await res.json(); msg = j.error || msg; } catch {}
+        throw new Error(msg);
+      }
       setStatus('success');
       setForm(initialState);
     } catch (err) {
-      setStatus('error');
+      setStatus(err.message || 'error');
     } finally {
       setLoading(false);
     }
@@ -159,8 +163,8 @@ export default function VehicleForm() {
               <FaCheckCircle style={{ marginRight: 6 }} /> Submitted successfully!
             </p>
           )}
-          {status === 'error' && (
-            <p style={styles.error}>Something went wrong. Try again.</p>
+          {status && status !== 'success' && (
+            <p style={styles.error}>{status}</p>
           )}
 
           <button type="submit" style={styles.button} disabled={loading}>
