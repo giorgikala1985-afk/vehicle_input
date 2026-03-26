@@ -13,19 +13,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/test', (req, res) => {
-  res.json({
-    supabaseUrl: !!process.env.SUPABASE_URL,
-    supabaseKey: !!process.env.SUPABASE_SERVICE_KEY,
-  });
-});
-
-app.get('/api/test2', async (req, res) => {
+app.get('/api/test', async (req, res) => {
   try {
     const { createClient } = require('@supabase/supabase-js');
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
     const { data, error } = await sb.from('vehicle_makes').select('*').limit(1);
-    if (error) return res.json({ error: error.message });
+    if (error) return res.json({ supabaseError: error.message });
     res.json({ success: true, count: data.length });
   } catch (e) {
     res.json({ caught: e.message });
