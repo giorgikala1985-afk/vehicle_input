@@ -18,10 +18,10 @@ app.get('/api/test', async (req, res) => {
     const { createClient } = require('@supabase/supabase-js');
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
     const { data, error } = await sb.from('vehicle_makes').select('*').limit(1);
-    if (error) return res.json({ supabaseError: error.message });
+    if (error) return res.json({ supabaseError: error.message, url: process.env.SUPABASE_URL });
     res.json({ success: true, count: data.length });
   } catch (e) {
-    res.json({ caught: e.message });
+    res.json({ caught: e.message, url: process.env.SUPABASE_URL });
   }
 });
 
