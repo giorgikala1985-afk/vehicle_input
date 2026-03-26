@@ -28,7 +28,6 @@ const initialState = {
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('vehicle_token') || ''}`
 });
 
 export default function VehicleForm() {

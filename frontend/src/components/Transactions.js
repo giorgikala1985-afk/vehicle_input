@@ -5,7 +5,6 @@ const BASE = process.env.REACT_APP_API_URL || '';
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('vehicle_token') || ''}`
 });
 
 const columns = [
