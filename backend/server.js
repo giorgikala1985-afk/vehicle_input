@@ -10,7 +10,6 @@ const authenticate  = require('./middleware/auth');
 
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
-app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/health', (req, res) => {
