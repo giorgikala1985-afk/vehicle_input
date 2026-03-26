@@ -16,60 +16,79 @@ const columns = [
   { key: 'body', label: 'Body' },
   { key: 'vin', label: 'VIN' },
   { key: 'lot', label: 'Lot' },
-  { key: 'auction', label: 'Auction' },
+  { key: 'auction', label: 'Auc.' },
   { key: 'product_type', label: 'Product Type' },
+  { key: 'dealer', label: 'Dealer' },
+  { key: 'dealer_amount', label: 'Dealer Amount' },
+  { key: 'dealer_date', label: 'Dealer Date' },
+  { key: 'sub_dealer', label: 'Sub-Dealer' },
+  { key: 'sub_dealer_amount', label: 'Sub-Dealer Amount' },
+  { key: 'sub_dealer_date', label: 'Sub-Dealer Date' },
   { key: 'auc_won_date', label: 'Auc Won Date' },
   { key: 'payment_due_date', label: 'Payment Due Date' },
-  { key: 'auction_due', label: 'Auction Due' },
+  { key: 'auction_due', label: 'Auc. Due' },
   { key: 'storage', label: 'Storage' },
-  { key: 'auction_payment_amount', label: 'Auction Payment Amount' },
-  { key: 'auction_payment_date', label: 'Auction Payment Date' },
-  { key: 'customer', label: 'Customer' },
-  { key: 'customer_payment_date', label: 'Customer Payment Date' },
-  { key: 'customer_payment_amount', label: 'Customer Payment Amount' },
+  { key: 'auction_invoice_initial', label: 'Auc. Invoice (Initial)' },
+  { key: 'auction_invoice_actual', label: 'Auc. Invoice (Actual)' },
+  { key: 'auction_additional_charges', label: 'Auc. Additional Charges' },
+  { key: 'auction_payment_amount', label: 'Auc. Payment Amount' },
+  { key: 'auction_payment_date', label: 'Auc. Payment Date' },
+  { key: 'auction_payment_status', label: 'Auc. Payment Status' },
+  { key: 'customer', label: 'Cust.' },
+  { key: 'customer_payment_date', label: 'Cust. Payment Date' },
+  { key: 'customer_payment_amount', label: 'Cust. Payment Amount' },
   { key: 'cash_received', label: 'Cash Received' },
-  { key: 'local_transportation_amount', label: 'Local Transportation Amount' },
-  { key: 'local_transportation_due_date', label: 'Local Transportation Due Date' },
-  { key: 'local_transportation_payment_date', label: 'Local Transportation Payment Date' },
-  { key: 'transportation_sales_amount', label: 'Transportation Sales Amount' },
-  { key: 'transportation_sales_due_date', label: 'Transportation Sales Due Date' },
+  { key: 'local_transportation_amount', label: 'Local Transp. Amount' },
+  { key: 'local_transportation_due_date', label: 'Local Transp. Due Date' },
+  { key: 'local_transportation_payment_date', label: 'Local Transp. Payment Date' },
+  { key: 'transportation_sales_amount', label: 'Transp. Sales Amount' },
+  { key: 'transportation_sales_due_date', label: 'Transp. Sales Due Date' },
+  { key: 'ocean_freight', label: 'Ocean Freight' },
+  { key: 'tch', label: 'TCH' },
+  { key: 'other_services', label: 'Other Services' },
 ];
 
 const SECTIONS = [
   {
     title: 'Vehicle Info', color: '#4f46e5',
-    fields: ['stock', 'year', 'make', 'model', 'body', 'vin', 'lot', 'auction', 'product_type']
+    fields: ['stock', 'year', 'make', 'model', 'body', 'vin', 'lot', 'auction', 'product_type',
+             'dealer', 'dealer_amount', 'dealer_date', 'sub_dealer', 'sub_dealer_amount', 'sub_dealer_date']
   },
   {
-    title: 'Auction Payment', color: '#0891b2',
-    fields: ['auc_won_date', 'payment_due_date', 'auction_due', 'storage', 'auction_payment_amount', 'auction_payment_date']
+    title: 'Auc. Payment', color: '#0891b2',
+    fields: ['auc_won_date', 'payment_due_date', 'auction_due', 'storage', 'auction_invoice_initial', 'auction_invoice_actual', 'auction_additional_charges', 'other_services', 'auction_payment_amount', 'auction_payment_date', 'auction_payment_status']
   },
   {
-    title: 'Customer', color: '#059669',
+    title: 'Cust.', color: '#059669',
     fields: ['customer', 'customer_payment_date', 'customer_payment_amount', 'cash_received']
   },
   {
-    title: 'Transportation', color: '#d97706',
-    fields: ['local_transportation_amount', 'local_transportation_due_date', 'local_transportation_payment_date', 'transportation_sales_amount', 'transportation_sales_due_date']
+    title: 'Transp.', color: '#d97706',
+    fields: ['local_transportation_amount', 'local_transportation_due_date', 'local_transportation_payment_date', 'transportation_sales_amount', 'transportation_sales_due_date', 'ocean_freight', 'tch']
   },
 ];
 
 const fieldMeta = {
   year: 'number', storage: 'number',
-  auction_payment_amount: 'number', customer_payment_amount: 'number',
+  auction_payment_amount: 'number', auction_invoice_initial: 'number', auction_invoice_actual: 'number',
+  auction_additional_charges: 'number', customer_payment_amount: 'number',
   local_transportation_amount: 'number', transportation_sales_amount: 'number',
+  dealer_amount: 'number', sub_dealer_amount: 'number',
+  ocean_freight: 'number', tch: 'number', other_services: 'number',
+  auction_payment_status: 'select',
   auc_won_date: 'date', payment_due_date: 'date', auction_due: 'date',
   auction_payment_date: 'date', customer_payment_date: 'date',
   local_transportation_due_date: 'date', local_transportation_payment_date: 'date',
-  transportation_sales_due_date: 'date',
+  transportation_sales_due_date: 'date', dealer_date: 'date', sub_dealer_date: 'date',
   product_type: 'select', cash_received: 'select',
   make: 'searchable', model: 'searchable', body: 'searchable',
+  dealer: 'searchable', sub_dealer: 'searchable',
 };
 
 function SearchableDropdown({ options, value, onChange }) {
   const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(false);
-  const ref = useRef();
+  const [open, setOpen]   = useState(false);
+  const ref               = useRef();
 
   const filtered = options.filter(o => o.toLowerCase().includes(query.toLowerCase()));
 
@@ -80,7 +99,7 @@ function SearchableDropdown({ options, value, onChange }) {
   }, []);
 
   const select = (opt) => { onChange(opt); setQuery(''); setOpen(false); };
-  const clear = (e) => { e.stopPropagation(); onChange(''); setQuery(''); };
+  const clear  = (e)   => { e.stopPropagation(); onChange(''); setQuery(''); };
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -95,26 +114,26 @@ function SearchableDropdown({ options, value, onChange }) {
             onChange={e => setQuery(e.target.value)}
             onClick={e => e.stopPropagation()}
             placeholder="Search…"
-            style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, background: 'transparent', fontFamily: 'inherit' }}
+            style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, background: 'transparent', fontFamily: 'inherit', color: 'var(--text)' }}
           />
         ) : (
-          <span style={{ flex: 1, color: value ? '#1a1a2e' : '#999', fontSize: 13 }}>
+          <span style={{ flex: 1, color: value ? 'var(--text)' : 'var(--subtle)', fontSize: 13 }}>
             {value || '-- Select --'}
           </span>
         )}
         {value && !open && (
-          <span onClick={clear} style={{ color: '#aaa', fontSize: 16, lineHeight: 1, cursor: 'pointer' }}>×</span>
+          <span onClick={clear} style={{ color: 'var(--subtle)', fontSize: 16, lineHeight: 1, cursor: 'pointer' }}>×</span>
         )}
-        <span style={{ color: '#aaa', fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+        <span style={{ color: 'var(--subtle)', fontSize: 10 }}>{open ? '▲' : '▼'}</span>
       </div>
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
-          background: '#fff', border: '1px solid #ddd', borderRadius: 6,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 150, overflowY: 'auto', marginTop: 2,
+          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 150, overflowY: 'auto', marginTop: 3,
         }}>
           {filtered.length === 0 ? (
-            <div style={{ padding: '6px 10px', color: '#999', fontSize: 12 }}>No matches</div>
+            <div style={{ padding: '6px 10px', color: 'var(--subtle)', fontSize: 12 }}>No matches</div>
           ) : (
             filtered.map(opt => (
               <div
@@ -123,10 +142,10 @@ function SearchableDropdown({ options, value, onChange }) {
                 style={{
                   padding: '6px 10px', cursor: 'pointer', fontSize: 13,
                   background: opt === value ? '#ede9fe' : 'transparent',
-                  color: opt === value ? '#4f46e5' : '#1a1a2e',
+                  color: opt === value ? '#4f46e5' : 'var(--text)',
                   fontWeight: opt === value ? 600 : 400,
                 }}
-                onMouseEnter={e => { if (opt !== value) e.currentTarget.style.background = '#f5f3ff'; }}
+                onMouseEnter={e => { if (opt !== value) e.currentTarget.style.background = 'var(--surface2)'; }}
                 onMouseLeave={e => { if (opt !== value) e.currentTarget.style.background = 'transparent'; }}
               >
                 {opt}
@@ -143,31 +162,24 @@ function EditModal({ data, options, onClose, onSave, saving }) {
   const [form, setForm] = useState({ ...data });
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-
   const colLabel = (key) => columns.find(c => c.key === key)?.label || key;
 
   const renderField = (key) => {
-    const type = fieldMeta[key] || 'text';
+    const type  = fieldMeta[key] || 'text';
     const label = colLabel(key);
-    const val = form[key] ?? '';
+    const val   = form[key] ?? '';
 
     if (type === 'searchable') {
       return (
         <div key={key} style={m.field}>
           <label style={m.label}>{label}</label>
-          <SearchableDropdown
-            options={options[key] || []}
-            value={val}
-            onChange={v => set(key, v)}
-          />
+          <SearchableDropdown options={options[key] || []} value={val} onChange={v => set(key, v)} />
         </div>
       );
     }
 
     if (type === 'select') {
-      const opts = key === 'product_type'
-        ? ['eBay Dismantling', 'Export']
-        : ['USA', 'GEORGIA'];
+      const opts = key === 'product_type' ? ['eBay Dismantling', 'Export'] : key === 'auction_payment_status' ? ['Pending', 'Paid', 'Overdue'] : ['USA', 'GEORGIA'];
       return (
         <div key={key} style={m.field}>
           <label style={m.label}>{label}</label>
@@ -182,12 +194,7 @@ function EditModal({ data, options, onClose, onSave, saving }) {
     return (
       <div key={key} style={m.field}>
         <label style={m.label}>{label}</label>
-        <input
-          style={m.input}
-          type={type}
-          value={val}
-          onChange={e => set(key, e.target.value)}
-        />
+        <input style={m.input} type={type} value={val} onChange={e => set(key, e.target.value)} />
       </div>
     );
   };
@@ -223,15 +230,15 @@ function EditModal({ data, options, onClose, onSave, saving }) {
 }
 
 export default function Transactions() {
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selected, setSelected] = useState(new Set());
-  const [deleting, setDeleting] = useState(false);
+  const [vehicles, setVehicles]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [selected, setSelected]   = useState(new Set());
+  const [deleting, setDeleting]   = useState(false);
   const [editRecord, setEditRecord] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [options, setOptions] = useState({ make: [], model: [], body: [] });
-  const [filters, setFilters] = useState(() => Object.fromEntries(columns.map(c => [c.key, ''])));
+  const [saving, setSaving]       = useState(false);
+  const [options, setOptions]     = useState({ make: [], model: [], body: [], dealer: [], sub_dealer: [] });
+  const [filters, setFilters]     = useState(() => Object.fromEntries(columns.map(c => [c.key, ''])));
 
   useEffect(() => {
     const h = { headers: authHeaders() };
@@ -243,6 +250,8 @@ export default function Transactions() {
     fetch(`${BASE}/api/options/makes`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, make: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
     fetch(`${BASE}/api/options/models`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, model: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
     fetch(`${BASE}/api/options/bodies`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, body: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/sub-dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, sub_dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
   }, []);
 
   const toggleAll = () => {
@@ -264,12 +273,12 @@ export default function Transactions() {
         fetch(`${BASE}/api/vehicles/${id}`, { method: 'DELETE', headers: authHeaders() }).then(r => ({ id, ok: r.ok }))
       ));
       const deleted = new Set(results.filter(r => r.ok).map(r => r.id));
-      const failed = results.filter(r => !r.ok).length;
+      const failed  = results.filter(r => !r.ok).length;
       if (deleted.size > 0) {
         setVehicles(v => v.filter(x => !deleted.has(x.id)));
         setSelected(new Set([...selected].filter(id => !deleted.has(id))));
       }
-      if (failed > 0) alert(`${failed} entry/entries could not be deleted. Try again.`);
+      if (failed > 0) alert(`${failed} entry/entries could not be deleted.`);
     } catch {
       alert('Failed to delete. Try again.');
     } finally {
@@ -309,10 +318,7 @@ export default function Transactions() {
 
   const downloadExcel = () => {
     const data = vehicles.map(v =>
-      columns.reduce((row, col) => {
-        row[col.label] = v[col.key] ?? '';
-        return row;
-      }, {})
+      columns.reduce((row, col) => { row[col.label] = v[col.key] ?? ''; return row; }, {})
     );
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -320,18 +326,18 @@ export default function Transactions() {
     XLSX.writeFile(wb, 'transactions.xlsx');
   };
 
-  const badgeCols = new Set(['product_type', 'cash_received']);
+  const badgeCols  = new Set(['product_type', 'cash_received']);
   const badgeColor = (key, val) => {
     if (key === 'product_type') return val === 'Export' ? { bg: '#dcfce7', color: '#15803d' } : { bg: '#ede9fe', color: '#6d28d9' };
     if (key === 'cash_received') return val === 'USA' ? { bg: '#dbeafe', color: '#1d4ed8' } : { bg: '#fef9c3', color: '#a16207' };
     return { bg: '#f1f5f9', color: '#475569' };
   };
 
-  if (loading) return <p style={styles.msg}>Loading...</p>;
-  if (error) return <p style={{ ...styles.msg, color: '#dc2626' }}>{error}</p>;
+  if (loading) return <p style={st.msg}>Loading...</p>;
+  if (error)   return <p style={{ ...st.msg, color: '#dc2626' }}>{error}</p>;
 
   return (
-    <div style={styles.wrapper}>
+    <div style={st.wrapper}>
       {editRecord && (
         <EditModal
           data={editRecord}
@@ -342,57 +348,54 @@ export default function Transactions() {
         />
       )}
 
-      {/* Top bar */}
-      <div style={styles.topBar}>
-        <div style={styles.stats}>
-          <span style={styles.statChip}>
-            <span style={styles.statDot} />
+      <div style={st.topBar}>
+        <div style={st.stats}>
+          <span style={st.statChip}>
+            <span style={st.statDot} />
             {vehicles.length} total
           </span>
           {filtered.length !== vehicles.length && (
-            <span style={{ ...styles.statChip, background: '#ede9fe', color: '#6d28d9' }}>
+            <span style={{ ...st.statChip, background: '#ede9fe', color: '#6d28d9' }}>
               {filtered.length} shown
             </span>
           )}
           {selected.size > 0 && (
-            <span style={{ ...styles.statChip, background: '#fef2f2', color: '#dc2626' }}>
+            <span style={{ ...st.statChip, background: '#fef2f2', color: '#dc2626' }}>
               {selected.size} selected
             </span>
           )}
         </div>
-        <div style={styles.actions}>
+        <div style={st.actions}>
           {selected.size > 0 && (
-            <button style={styles.deleteBtn} onClick={handleDeleteSelected} disabled={deleting}>
+            <button style={st.deleteBtn} onClick={handleDeleteSelected} disabled={deleting}>
               {deleting ? 'Deleting…' : `Delete (${selected.size})`}
             </button>
           )}
-          <button style={styles.excelBtn} onClick={downloadExcel}>
-            ↓ Export Excel
-          </button>
+          <button style={st.excelBtn} onClick={downloadExcel}>↓ Export Excel</button>
         </div>
       </div>
 
-      {vehicles.length === 0 && <p style={styles.msg}>No entries yet.</p>}
+      {vehicles.length === 0 && <p style={st.msg}>No entries yet.</p>}
 
       {vehicles.length > 0 && (
-        <div style={styles.card}>
-          <div style={styles.tableWrap}>
-            <table style={styles.table}>
+        <div style={st.card}>
+          <div style={st.tableWrap}>
+            <table style={st.table}>
               <thead>
                 <tr>
-                  <th style={styles.th} rowSpan={2}>
+                  <th style={st.th} rowSpan={2}>
                     <input type="checkbox" checked={allSelected} onChange={toggleAll} />
                   </th>
-                  <th style={styles.th} rowSpan={2}>Actions</th>
+                  <th style={st.th} rowSpan={2}>Actions</th>
                   {columns.map(col => (
-                    <th key={col.key} style={styles.th}>{col.label}</th>
+                    <th key={col.key} style={st.th}>{col.label}</th>
                   ))}
                 </tr>
                 <tr>
                   {columns.map(col => (
-                    <th key={col.key} style={styles.filterTh}>
+                    <th key={col.key} style={st.filterTh}>
                       <input
-                        style={styles.filterInput}
+                        style={st.filterInput}
                         placeholder="⌕"
                         value={filters[col.key]}
                         onChange={e => setFilter(col.key, e.target.value)}
@@ -404,7 +407,7 @@ export default function Transactions() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length + 2} style={styles.emptyRow}>
+                    <td colSpan={columns.length + 2} style={st.emptyRow}>
                       No records match your filters.
                     </td>
                   </tr>
@@ -412,27 +415,27 @@ export default function Transactions() {
                   filtered.map((v) => (
                     <tr
                       key={v.id}
-                      style={selected.has(v.id) ? styles.rowSelected : styles.row}
-                      onMouseEnter={e => { if (!selected.has(v.id)) e.currentTarget.style.background = '#f8faff'; }}
+                      style={selected.has(v.id) ? st.rowSelected : st.row}
+                      onMouseEnter={e => { if (!selected.has(v.id)) e.currentTarget.style.background = 'var(--surface2)'; }}
                       onMouseLeave={e => { if (!selected.has(v.id)) e.currentTarget.style.background = ''; }}
                     >
-                      <td style={styles.td}>
+                      <td style={st.td}>
                         <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleOne(v.id)} />
                       </td>
-                      <td style={styles.td}>
-                        <button style={styles.editBtn} onClick={() => setEditRecord(v)}>Edit</button>
+                      <td style={st.td}>
+                        <button style={st.editBtn} onClick={() => setEditRecord(v)}>Edit</button>
                       </td>
                       {columns.map(col => {
                         const val = v[col.key];
                         if (badgeCols.has(col.key) && val) {
                           const bc = badgeColor(col.key, val);
                           return (
-                            <td key={col.key} style={styles.td}>
-                              <span style={{ ...styles.badge, background: bc.bg, color: bc.color }}>{val}</span>
+                            <td key={col.key} style={st.td}>
+                              <span style={{ ...st.badge, background: bc.bg, color: bc.color }}>{val}</span>
                             </td>
                           );
                         }
-                        return <td key={col.key} style={styles.td}>{val ?? <span style={styles.empty}>—</span>}</td>;
+                        return <td key={col.key} style={st.td}>{val ?? <span style={st.empty}>—</span>}</td>;
                       })}
                     </tr>
                   ))
@@ -446,7 +449,7 @@ export default function Transactions() {
   );
 }
 
-const styles = {
+const st = {
   wrapper: { padding: '0 16px 24px' },
   topBar: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -456,106 +459,101 @@ const styles = {
   statChip: {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-    background: '#f1f5f9', color: '#475569',
+    background: 'var(--surface2)', color: 'var(--muted)',
   },
-  statDot: {
-    width: 7, height: 7, borderRadius: '50%', background: '#4f46e5', display: 'inline-block',
-  },
+  statDot: { width: 7, height: 7, borderRadius: '50%', background: '#4f46e5', display: 'inline-block' },
   actions: { display: 'flex', gap: 8, alignItems: 'center' },
   excelBtn: {
     padding: '8px 18px', background: '#16a34a', color: '#fff',
     border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-    letterSpacing: 0.3,
   },
   deleteBtn: {
-    padding: '8px 16px', background: '#fff', color: '#dc2626',
-    border: '1.5px solid #fca5a5', borderRadius: 8, cursor: 'pointer',
-    fontSize: 13, fontWeight: 600,
+    padding: '8px 16px', background: 'var(--surface)', color: '#dc2626',
+    border: '1.5px solid #fca5a5', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
   },
   card: {
-    background: '#fff', borderRadius: 12,
+    background: 'var(--surface)', borderRadius: 12,
     boxShadow: '0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)',
-    overflow: 'hidden',
+    overflow: 'hidden', border: '1px solid var(--border)',
   },
   tableWrap: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 1200 },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 1400 },
   th: {
     background: '#4f46e5', color: '#fff', padding: '11px 13px',
     textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600,
     fontSize: 12, letterSpacing: 0.3, position: 'sticky', top: 0, zIndex: 2,
   },
   filterTh: {
-    background: '#eef2ff', padding: '5px 6px',
-    borderBottom: '2px solid #c7d2fe', position: 'sticky', top: 38, zIndex: 1,
+    background: 'var(--surface2)', padding: '5px 6px',
+    borderBottom: '2px solid var(--border)', position: 'sticky', top: 38, zIndex: 1,
   },
   filterInput: {
     width: '100%', boxSizing: 'border-box',
     padding: '4px 8px', fontSize: 12,
-    border: '1px solid #c7d2fe', borderRadius: 5,
-    outline: 'none', background: '#fff', color: '#1e1b4b',
+    border: '1px solid var(--input-border)', borderRadius: 5,
+    outline: 'none', background: 'var(--input-bg)', color: 'var(--text)',
     fontFamily: 'inherit',
   },
-  row: { borderBottom: '1px solid #f1f5f9', transition: 'background 0.1s' },
+  row: { borderBottom: '1px solid var(--border)', transition: 'background 0.1s' },
   rowSelected: { background: '#ede9fe', borderBottom: '1px solid #ddd6fe' },
-  td: { padding: '9px 13px', whiteSpace: 'nowrap', color: '#374151' },
+  td: { padding: '9px 13px', whiteSpace: 'nowrap', color: 'var(--text)' },
   badge: {
     display: 'inline-block', padding: '2px 9px', borderRadius: 20,
     fontSize: 11, fontWeight: 700, letterSpacing: 0.3,
   },
-  empty: { color: '#d1d5db' },
+  empty: { color: 'var(--subtle)' },
   editBtn: {
-    padding: '4px 12px', background: '#f5f3ff', color: '#4f46e5',
-    border: '1px solid #ddd6fe', borderRadius: 6, cursor: 'pointer',
+    padding: '4px 12px', background: 'var(--surface2)', color: '#4f46e5',
+    border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer',
     fontSize: 12, fontWeight: 600,
   },
   emptyRow: {
-    textAlign: 'center', padding: '32px', color: '#94a3b8',
+    textAlign: 'center', padding: '32px', color: 'var(--subtle)',
     fontSize: 14, fontStyle: 'italic',
   },
-  msg: { color: '#94a3b8', padding: '40px 24px', textAlign: 'center', fontSize: 15 },
+  msg: { color: 'var(--subtle)', padding: '40px 24px', textAlign: 'center', fontSize: 15 },
 };
 
 const m = {
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
   },
   modal: {
-    background: '#fff', borderRadius: 14, width: '90%', maxWidth: 780,
+    background: 'var(--surface)', borderRadius: 16, width: '90%', maxWidth: 800,
     maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-    boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.25)', border: '1px solid var(--border)',
   },
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '18px 24px', borderBottom: '1px solid #e2e8f0',
+    padding: '18px 24px', borderBottom: '1px solid var(--border)',
   },
-  headerTitle: { fontWeight: 700, fontSize: 17, color: '#1e293b' },
+  headerTitle: { fontWeight: 700, fontSize: 17, color: 'var(--text)' },
   closeBtn: {
     background: 'none', border: 'none', fontSize: 22, cursor: 'pointer',
-    color: '#94a3b8', lineHeight: 1, padding: '0 4px',
+    color: 'var(--subtle)', lineHeight: 1, padding: '0 4px',
   },
   body: { overflowY: 'auto', padding: '20px 24px', flex: 1 },
   section: { marginBottom: 24 },
   sectionTitle: {
-    fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
+    fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2,
     borderBottom: '2px solid', paddingBottom: 6, margin: '0 0 14px',
   },
-  grid: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12,
-  },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
-  label: { fontSize: 12, color: '#64748b', fontWeight: 500 },
+  label: { fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: 7,
+    padding: '7px 10px', border: '1px solid var(--input-border)', borderRadius: 7,
     fontSize: 13, outline: 'none', fontFamily: 'inherit',
+    background: 'var(--input-bg)', color: 'var(--text)',
   },
   footer: {
     display: 'flex', justifyContent: 'flex-end', gap: 10,
-    padding: '16px 24px', borderTop: '1px solid #e2e8f0',
+    padding: '16px 24px', borderTop: '1px solid var(--border)',
   },
   cancelBtn: {
-    padding: '9px 20px', background: 'none', border: '1px solid #e2e8f0',
-    borderRadius: 8, fontSize: 13, color: '#64748b', cursor: 'pointer', fontFamily: 'inherit',
+    padding: '9px 20px', background: 'none', border: '1px solid var(--border)',
+    borderRadius: 8, fontSize: 13, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit',
   },
   saveBtn: {
     padding: '9px 24px', background: '#4f46e5', color: '#fff',
