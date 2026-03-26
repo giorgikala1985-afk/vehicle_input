@@ -20,6 +20,18 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+app.get('/api/test2', async (req, res) => {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { data, error } = await sb.from('vehicle_makes').select('*').limit(1);
+    if (error) return res.json({ error: error.message });
+    res.json({ success: true, count: data.length });
+  } catch (e) {
+    res.json({ caught: e.message });
+  }
+});
+
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/options', optionsRoutes);
