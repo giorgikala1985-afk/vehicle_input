@@ -5,6 +5,7 @@ const cors = require('cors');
 const vehicleRoutes = require('./routes/vehicles');
 const optionsRoutes = require('./routes/options');
 const userRoutes    = require('./routes/users');
+const authRoutes    = require('./routes/auth');
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json({ limit: '10mb' }));
@@ -25,6 +26,7 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/options', optionsRoutes);
