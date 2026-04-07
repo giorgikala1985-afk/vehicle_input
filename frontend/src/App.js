@@ -3,6 +3,7 @@ import VehicleForm from './components/VehicleForm';
 import Transactions from './components/Transactions';
 import OptionsPage from './components/OptionsPage';
 import ExcelImport from './components/ExcelImport';
+import AuthPage from './components/AuthPage';
 
 const LIGHT = {
   '--bg':           '#f0f4f8',
@@ -31,13 +32,18 @@ const DARK = {
 const TABS = [
   { key: 'entry',        label: 'Entry Info'   },
   { key: 'transactions', label: 'Transactions' },
-  { key: 'import',       label: 'Import Excel' },
   { key: 'options',      label: 'Options'      },
 ];
 
 function App() {
   const [tab, setTab]     = useState('entry');
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'light');
+  const [user, setUser]   = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vehicle_user')); } catch { return null; }
+  });
+
+  const handleLogin = (u) => { setUser(u); };
+  const handleLogout = () => { localStorage.removeItem('vehicle_token'); localStorage.removeItem('vehicle_user'); setUser(null); };
 
   useEffect(() => {
     const vars = theme === 'dark' ? DARK : LIGHT;
@@ -47,6 +53,8 @@ function App() {
   }, [theme]);
 
   const isDark = theme === 'dark';
+
+  if (!user) return <AuthPage onLogin={handleLogin} />;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: "'Lexend', -apple-system, sans-serif" }}>
@@ -80,7 +88,14 @@ function App() {
           </button>
         ))}
 
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>{user.email}</span>
+          <button
+            onClick={handleLogout}
+            style={{ padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface2)', fontSize: 13, cursor: 'pointer', color: 'var(--muted)', fontFamily: 'inherit' }}
+          >
+            Sign out
+          </button>
           <button
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}

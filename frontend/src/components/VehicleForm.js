@@ -23,7 +23,11 @@ const initialState = {
   local_transportation_amount: '', local_transportation_due_date: '',
   local_transportation_payment_date: '',
   transportation_sales_amount: '', transportation_sales_due_date: '',
-  ocean_freight: '', tch: '', auction_additional_charges: '', other_services: ''
+  ocean_freight: '', tch: '', auction_additional_charges: '', other_services: '',
+  price_car_invoice_cost: '', price_car_price: '', price_client_price: '', price_transport_base: '',
+  price_dealer: '', price_dealer_additional: '', price_dealer_invoice_additional: '',
+  price_sub_dealer: '', price_sub_dealer_additional: '', price_sub_dealer_invoice_additional: '',
+  price_dealer_jr: '', price_dealer_jr_additional: '', price_dealer_jr_invoice_additional: '',
 };
 
 const authHeaders = () => ({
@@ -40,6 +44,7 @@ export default function VehicleForm() {
   const [bodies, setBodies]       = useState([]);
   const [dealers, setDealers]     = useState([]);
   const [subDealers, setSubDealers] = useState([]);
+  const [dealerJrs, setDealerJrs] = useState([]);
 
   useEffect(() => {
     const base = process.env.REACT_APP_API_URL || '';
@@ -48,6 +53,7 @@ export default function VehicleForm() {
     fetch(`${base}/api/options/bodies`, h).then(r => r.json()).then(d => setBodies(Array.isArray(d) ? d : [])).catch(() => {});
     fetch(`${base}/api/options/dealers`, h).then(r => r.json()).then(d => setDealers(Array.isArray(d) ? d : [])).catch(() => {});
     fetch(`${base}/api/options/sub-dealers`, h).then(r => r.json()).then(d => setSubDealers(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch(`${base}/api/options/dealer-jrs`, h).then(r => r.json()).then(d => setDealerJrs(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -90,6 +96,25 @@ export default function VehicleForm() {
       setLoading(false);
     }
   };
+
+  const priceGroup = (label, mainName, addName, invName, dropdownOpts = null, fullItems = null) => (
+    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+      {dropdownOpts
+        ? searchableDropdown(label, mainName, dropdownOpts, FaUser, fullItems ? (val) => {
+            const found = fullItems.find(d => d.name === val);
+            if (found) {
+              setForm(f => ({
+                ...f,
+                [addName]: found.loc_price != null ? String(found.loc_price) : f[addName],
+                [invName]: found.inv_add  != null ? String(found.inv_add)   : f[invName],
+              }));
+            }
+          } : null)
+        : field(label, mainName, 'number', FaDollarSign)}
+      {field('Additional', addName, 'number', FaDollarSign)}
+      {field('Invoice Additional', invName, 'number', FaDollarSign)}
+    </div>
+  );
 
   const field = (label, name, type = 'text', Icon = null) => (
     <div style={st.field}>
@@ -153,12 +178,6 @@ export default function VehicleForm() {
             {field('Lot', 'lot', 'text', FaMapMarkerAlt)}
             {dropdown('Auc.', 'auction', ['Copart', 'IAAI'], FaGavel)}
             {dropdown('Product Type', 'product_type', ['eBay Dismantling', 'Export'], FaBoxOpen)}
-            {form.product_type === 'Export' && searchableDropdown('Dealer', 'dealer', dealers.map(d => d.name), FaUser)}
-            {form.product_type === 'Export' && field('Dealer Amount', 'dealer_amount', 'number', FaDollarSign)}
-            {form.product_type === 'Export' && field('Dealer Date', 'dealer_date', 'date', FaCalendarCheck)}
-            {form.product_type === 'Export' && searchableDropdown('Sub-Dealer', 'sub_dealer', subDealers.map(d => d.name), FaUser)}
-            {form.product_type === 'Export' && field('Sub-Dealer Amount', 'sub_dealer_amount', 'number', FaDollarSign)}
-            {form.product_type === 'Export' && field('Sub-Dealer Date', 'sub_dealer_date', 'date', FaCalendarCheck)}
           </Section>
 
           <Section title="Auc. Payment" color="#0891b2">
@@ -195,6 +214,16 @@ export default function VehicleForm() {
             {field('Transp. Sales Due Date (by customer)', 'transportation_sales_due_date', 'date', FaCalendarTimes)}
             {field('Ocean Freight', 'ocean_freight', 'number', FaDollarSign)}
             {field('TCH', 'tch', 'number', FaDollarSign)}
+          </Section>
+
+          <Section title="ხალხის გაბითურება ფასებით" color="#7c3aed">
+            {field('Car Invoice Cost', 'price_car_invoice_cost', 'number', FaDollarSign)}
+            {field('Car Price', 'price_car_price', 'number', FaDollarSign)}
+            {field('Client Price', 'price_client_price', 'number', FaDollarSign)}
+            {field('Transport Base Price', 'price_transport_base', 'number', FaDollarSign)}
+            {form.product_type === 'Export' && priceGroup('Dealer', 'price_dealer', 'price_dealer_additional', 'price_dealer_invoice_additional', dealers.map(d => d.name), dealers)}
+            {form.product_type === 'Export' && priceGroup('Sub-dealer', 'price_sub_dealer', 'price_sub_dealer_additional', 'price_sub_dealer_invoice_additional', subDealers.map(d => d.name))}
+            {form.product_type === 'Export' && priceGroup('Dealer Jr.', 'price_dealer_jr', 'price_dealer_jr_additional', 'price_dealer_jr_invoice_additional', dealerJrs.map(d => d.name))}
           </Section>
 
           {status && status !== 'success' && (

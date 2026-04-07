@@ -59,6 +59,19 @@ router.post('/', async (req, res) => {
       tch:                                toNum(b.tch),
       auction_additional_charges:         toNum(b.auction_additional_charges),
       other_services:                     toNum(b.other_services),
+      price_car_invoice_cost:             toNum(b.price_car_invoice_cost),
+      price_car_price:                    toNum(b.price_car_price),
+      price_client_price:                 toNum(b.price_client_price),
+      price_transport_base:               toNum(b.price_transport_base),
+      price_dealer:                       toNull(b.price_dealer),
+      price_dealer_additional:            toNum(b.price_dealer_additional),
+      price_dealer_invoice_additional:    toNum(b.price_dealer_invoice_additional),
+      price_sub_dealer:                   toNull(b.price_sub_dealer),
+      price_sub_dealer_additional:        toNum(b.price_sub_dealer_additional),
+      price_sub_dealer_invoice_additional: toNum(b.price_sub_dealer_invoice_additional),
+      price_dealer_jr:                    toNull(b.price_dealer_jr),
+      price_dealer_jr_additional:         toNum(b.price_dealer_jr_additional),
+      price_dealer_jr_invoice_additional: toNum(b.price_dealer_jr_invoice_additional),
     }]);
 
   if (error) return res.status(400).json({ error: error.message });
@@ -124,6 +137,19 @@ router.put('/:id', async (req, res) => {
       tch:                                toNum(b.tch),
       auction_additional_charges:         toNum(b.auction_additional_charges),
       other_services:                     toNum(b.other_services),
+      price_car_invoice_cost:             toNum(b.price_car_invoice_cost),
+      price_car_price:                    toNum(b.price_car_price),
+      price_client_price:                 toNum(b.price_client_price),
+      price_transport_base:               toNum(b.price_transport_base),
+      price_dealer:                       toNull(b.price_dealer),
+      price_dealer_additional:            toNum(b.price_dealer_additional),
+      price_dealer_invoice_additional:    toNum(b.price_dealer_invoice_additional),
+      price_sub_dealer:                   toNull(b.price_sub_dealer),
+      price_sub_dealer_additional:        toNum(b.price_sub_dealer_additional),
+      price_sub_dealer_invoice_additional: toNum(b.price_sub_dealer_invoice_additional),
+      price_dealer_jr:                    toNull(b.price_dealer_jr),
+      price_dealer_jr_additional:         toNum(b.price_dealer_jr_additional),
+      price_dealer_jr_invoice_additional: toNum(b.price_dealer_jr_invoice_additional),
     })
     .eq('id', req.params.id);
 
@@ -186,6 +212,19 @@ router.post('/bulk', async (req, res) => {
     tch:                         toNum(b.tch),
     auction_additional_charges:  toNum(b.auction_additional_charges),
     other_services:              toNum(b.other_services),
+    price_car_invoice_cost:             toNum(b.price_car_invoice_cost),
+    price_car_price:                    toNum(b.price_car_price),
+    price_client_price:                 toNum(b.price_client_price),
+    price_transport_base:               toNum(b.price_transport_base),
+    price_dealer:                       toNull(b.price_dealer),
+    price_dealer_additional:            toNum(b.price_dealer_additional),
+    price_dealer_invoice_additional:    toNum(b.price_dealer_invoice_additional),
+    price_sub_dealer:                   toNull(b.price_sub_dealer),
+    price_sub_dealer_additional:        toNum(b.price_sub_dealer_additional),
+    price_sub_dealer_invoice_additional: toNum(b.price_sub_dealer_invoice_additional),
+    price_dealer_jr:                    toNull(b.price_dealer_jr),
+    price_dealer_jr_additional:         toNum(b.price_dealer_jr_additional),
+    price_dealer_jr_invoice_additional: toNum(b.price_dealer_jr_invoice_additional),
   }));
 
   const { data, error } = await supabase.from('vehicles').insert(records);

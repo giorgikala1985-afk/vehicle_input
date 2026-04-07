@@ -45,6 +45,19 @@ const columns = [
   { key: 'ocean_freight', label: 'Ocean Freight' },
   { key: 'tch', label: 'TCH' },
   { key: 'other_services', label: 'Other Services' },
+  { key: 'price_car_invoice_cost', label: 'Car Invoice Cost' },
+  { key: 'price_car_price', label: 'Car Price' },
+  { key: 'price_client_price', label: 'Client Price' },
+  { key: 'price_transport_base', label: 'Transport Base Price' },
+  { key: 'price_dealer', label: 'Dealer Price' },
+  { key: 'price_dealer_additional', label: 'Dealer Additional' },
+  { key: 'price_dealer_invoice_additional', label: 'Dealer Invoice Additional' },
+  { key: 'price_sub_dealer', label: 'Sub-dealer Price' },
+  { key: 'price_sub_dealer_additional', label: 'Sub-dealer Additional' },
+  { key: 'price_sub_dealer_invoice_additional', label: 'Sub-dealer Invoice Additional' },
+  { key: 'price_dealer_jr', label: 'Dealer Jr. Price' },
+  { key: 'price_dealer_jr_additional', label: 'Dealer Jr. Additional' },
+  { key: 'price_dealer_jr_invoice_additional', label: 'Dealer Jr. Invoice Additional' },
 ];
 
 const SECTIONS = [
@@ -65,6 +78,13 @@ const SECTIONS = [
     title: 'Transp.', color: '#d97706',
     fields: ['local_transportation_amount', 'local_transportation_due_date', 'local_transportation_payment_date', 'transportation_sales_amount', 'transportation_sales_due_date', 'ocean_freight', 'tch']
   },
+  {
+    title: 'ხალხის გაბითურება ფასებით', color: '#7c3aed',
+    fields: ['price_car_invoice_cost', 'price_car_price', 'price_client_price', 'price_transport_base',
+             'price_dealer', 'price_dealer_additional', 'price_dealer_invoice_additional',
+             'price_sub_dealer', 'price_sub_dealer_additional', 'price_sub_dealer_invoice_additional',
+             'price_dealer_jr', 'price_dealer_jr_additional', 'price_dealer_jr_invoice_additional']
+  },
 ];
 
 const fieldMeta = {
@@ -74,7 +94,15 @@ const fieldMeta = {
   local_transportation_amount: 'number', transportation_sales_amount: 'number',
   dealer_amount: 'number', sub_dealer_amount: 'number',
   ocean_freight: 'number', tch: 'number', other_services: 'number',
-  auction_payment_status: 'select',
+  price_car_invoice_cost: 'number', price_car_price: 'number', price_client_price: 'number',
+  price_transport_base: 'number',
+  price_dealer: 'searchable', price_dealer_additional: 'number',
+  price_dealer_invoice_additional: 'number',
+  price_sub_dealer: 'searchable', price_sub_dealer_additional: 'number',
+  price_sub_dealer_invoice_additional: 'number',
+  price_dealer_jr: 'searchable', price_dealer_jr_additional: 'number',
+  price_dealer_jr_invoice_additional: 'number',
+  auction: 'select', auction_payment_status: 'select',
   auc_won_date: 'date', payment_due_date: 'date', auction_due: 'date',
   auction_payment_date: 'date', customer_payment_date: 'date',
   local_transportation_due_date: 'date', local_transportation_payment_date: 'date',
@@ -157,7 +185,7 @@ function SearchableDropdown({ options, value, onChange }) {
   );
 }
 
-function EditModal({ data, options, onClose, onSave, saving }) {
+function EditModal({ data, options, allModels, onClose, onSave, saving }) {
   const [form, setForm] = useState({ ...data });
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
@@ -169,16 +197,29 @@ function EditModal({ data, options, onClose, onSave, saving }) {
     const val   = form[key] ?? '';
 
     if (type === 'searchable') {
+      let opts = options[key] || [];
+      if (key === 'model') {
+        opts = form.make
+          ? allModels.filter(m => !m.make_name || m.make_name === form.make).map(m => m.name)
+          : allModels.map(m => m.name);
+      }
       return (
         <div key={key} style={m.field}>
           <label style={m.label}>{label}</label>
-          <SearchableDropdown options={options[key] || []} value={val} onChange={v => set(key, v)} />
+          <SearchableDropdown
+            options={opts}
+            value={val}
+            onChange={v => {
+              if (key === 'make') setForm(f => ({ ...f, make: v, model: '' }));
+              else set(key, v);
+            }}
+          />
         </div>
       );
     }
 
     if (type === 'select') {
-      const opts = key === 'product_type' ? ['eBay Dismantling', 'Export'] : key === 'auction_payment_status' ? ['Pending', 'Paid', 'Overdue'] : ['USA', 'GEORGIA'];
+      const opts = key === 'product_type' ? ['eBay Dismantling', 'Export'] : key === 'auction_payment_status' ? ['Pending', 'Paid', 'Overdue'] : key === 'auction' ? ['Copart', 'IAAI'] : ['USA', 'GEORGIA'];
       return (
         <div key={key} style={m.field}>
           <label style={m.label}>{label}</label>
@@ -206,16 +247,34 @@ function EditModal({ data, options, onClose, onSave, saving }) {
           <button style={m.closeBtn} onClick={onClose}>×</button>
         </div>
         <div style={m.body}>
-          {SECTIONS.map(sec => (
-            <div key={sec.title} style={m.section}>
-              <h3 style={{ ...m.sectionTitle, color: sec.color, borderBottomColor: sec.color }}>
-                {sec.title}
-              </h3>
-              <div style={m.grid}>
-                {sec.fields.map(renderField)}
+          {SECTIONS.map(sec => {
+            const isPriceSection = sec.title === 'ხალხის გაბითურება ფასებით';
+            if (isPriceSection) {
+              const standaloneFields = ['price_car_invoice_cost', 'price_car_price', 'price_client_price', 'price_transport_base'];
+              const dealerGroups = [
+                { label: 'Dealer', fields: ['price_dealer', 'price_dealer_additional', 'price_dealer_invoice_additional'] },
+                { label: 'Sub-dealer', fields: ['price_sub_dealer', 'price_sub_dealer_additional', 'price_sub_dealer_invoice_additional'] },
+                { label: 'Dealer Jr.', fields: ['price_dealer_jr', 'price_dealer_jr_additional', 'price_dealer_jr_invoice_additional'] },
+              ];
+              return (
+                <div key={sec.title} style={m.section}>
+                  <h3 style={{ ...m.sectionTitle, color: sec.color, borderBottomColor: sec.color }}>{sec.title}</h3>
+                  <div style={m.grid}>{standaloneFields.map(renderField)}</div>
+                  {dealerGroups.map(g => (
+                    <div key={g.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
+                      {g.fields.map(renderField)}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            return (
+              <div key={sec.title} style={m.section}>
+                <h3 style={{ ...m.sectionTitle, color: sec.color, borderBottomColor: sec.color }}>{sec.title}</h3>
+                <div style={m.grid}>{sec.fields.map(renderField)}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div style={m.footer}>
           <button style={m.cancelBtn} onClick={onClose}>Cancel</button>
@@ -236,7 +295,8 @@ export default function Transactions() {
   const [deleting, setDeleting]   = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [saving, setSaving]       = useState(false);
-  const [options, setOptions]     = useState({ make: [], model: [], body: [], dealer: [], sub_dealer: [] });
+  const [options, setOptions]     = useState({ make: [], model: [], body: [], dealer: [], sub_dealer: [], price_dealer: [], price_sub_dealer: [], price_dealer_jr: [] });
+  const [allModels, setAllModels] = useState([]);
   const [filters, setFilters]     = useState(() => Object.fromEntries(columns.map(c => [c.key, ''])));
 
   useEffect(() => {
@@ -247,10 +307,16 @@ export default function Transactions() {
       .catch(() => { setError('Failed to load data.'); setLoading(false); });
 
     fetch(`${BASE}/api/options/makes`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, make: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
-    fetch(`${BASE}/api/options/models`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, model: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/models`, h).then(r => r.json()).then(d => {
+      const arr = Array.isArray(d) ? d : [];
+      setAllModels(arr);
+      setOptions(o => ({ ...o, model: arr.map(x => x.name) }));
+    }).catch(() => {});
     fetch(`${BASE}/api/options/bodies`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, body: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
     fetch(`${BASE}/api/options/dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
-    fetch(`${BASE}/api/options/sub-dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, sub_dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/sub-dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, sub_dealer: Array.isArray(d) ? d.map(x => x.name) : [], price_sub_dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/dealers`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, price_dealer: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
+    fetch(`${BASE}/api/options/dealer-jrs`, h).then(r => r.json()).then(d => setOptions(o => ({ ...o, price_dealer_jr: Array.isArray(d) ? d.map(x => x.name) : [] }))).catch(() => {});
   }, []);
 
   const toggleAll = () => {
@@ -341,6 +407,7 @@ export default function Transactions() {
         <EditModal
           data={editRecord}
           options={options}
+          allModels={allModels}
           onClose={() => setEditRecord(null)}
           onSave={handleSave}
           saving={saving}
@@ -538,7 +605,7 @@ const m = {
     fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2,
     borderBottom: '2px solid', paddingBottom: 6, margin: '0 0 14px',
   },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   label: { fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
