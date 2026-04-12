@@ -466,6 +466,232 @@ function SubTabBar({ sections, active, onSelect, color }) {
   );
 }
 
+// ─── Field Order Editor ────────────────────────────────────────────────────────
+
+export const FIELD_ORDER_KEY = 'vehicle_field_order';
+
+export const DEFAULT_SECTIONS = [
+  {
+    key: 'vehicle-info', label: 'Vehicle Info', color: '#4f46e5',
+    fields: [
+      { key: 'stock', label: 'Stock' },
+      { key: 'year', label: 'Year' },
+      { key: 'make', label: 'Make' },
+      { key: 'model', label: 'Model' },
+      { key: 'body', label: 'Body' },
+      { key: 'vin', label: 'VIN' },
+      { key: 'lot', label: 'Lot' },
+      { key: 'auction', label: 'Auc.' },
+      { key: 'product_type', label: 'Product Type' },
+    ],
+  },
+  {
+    key: 'auc-payment', label: 'Auc. Payment', color: '#0891b2',
+    fields: [
+      { key: 'auc_won_date', label: 'Auc Won Date' },
+      { key: 'payment_due_date', label: 'Payment Due Date' },
+      { key: 'auction_due', label: 'Auc. Due' },
+      { key: 'storage', label: 'Storage' },
+      { key: 'auction_invoice_initial', label: 'Auc. Invoice (Initial)' },
+      { key: 'auction_invoice_actual', label: 'Auc. Invoice (Actual)' },
+      { key: 'auction_payment_amount', label: 'Auc. Payment Amount' },
+      { key: 'auction_payment_date', label: 'Auc. Payment Date' },
+      { key: 'auction_additional_charges', label: 'Auc. Additional Charges' },
+      { key: 'other_services', label: 'Other Services' },
+      { key: 'auction_payment_status', label: 'Auc. Payment Status' },
+    ],
+  },
+  {
+    key: 'customer', label: 'Cust.', color: '#059669',
+    fields: [
+      { key: 'customer', label: 'Cust.' },
+      { key: 'customer_payment_date', label: 'Cust. Payment Date' },
+      { key: 'customer_payment_amount', label: 'Cust. Payment Amount' },
+      { key: 'cash_received', label: 'Cash Received' },
+      { key: 'customer_due_date_auction', label: 'Cust. Due Date - Auc.' },
+      { key: 'customer_due_date_transportation', label: 'Cust. Due Date - Transp.' },
+      { key: 'customer_due_auction', label: 'Cust. Due - Auc.' },
+      { key: 'customer_due_transportation', label: 'Cust. Due - Transp.' },
+      { key: 'customer_due_insurance', label: 'Cust. Due - Insurance' },
+    ],
+  },
+  {
+    key: 'transportation', label: 'Transp.', color: '#d97706',
+    fields: [
+      { key: 'local_transportation_amount', label: 'Local Transp. Amount' },
+      { key: 'local_transportation_due_date', label: 'Local Transp. Due Date' },
+      { key: 'local_transportation_payment_date', label: 'Local Transp. Payment Date' },
+      { key: 'transportation_sales_amount', label: 'Transp. Sales Amount' },
+      { key: 'transportation_sales_due_date', label: 'Transp. Sales Due Date' },
+      { key: 'ocean_freight', label: 'Ocean Freight' },
+      { key: 'tch', label: 'TCH' },
+    ],
+  },
+  {
+    key: 'prices', label: 'Prices', color: '#7c3aed',
+    fields: [
+      { key: 'price_car_invoice_cost', label: 'Car Invoice Cost' },
+      { key: 'price_car_price', label: 'Car Price' },
+      { key: 'price_client_price', label: 'Client Price' },
+      { key: 'price_transport_base', label: 'Transport Base Price' },
+      { key: 'price_dealer', label: 'Dealer' },
+      { key: 'price_sub_dealer', label: 'Sub-dealer' },
+      { key: 'price_dealer_jr', label: 'Dealer Jr.' },
+    ],
+  },
+];
+
+export function loadFieldOrder() {
+  try {
+    const saved = localStorage.getItem(FIELD_ORDER_KEY);
+    if (!saved) return DEFAULT_SECTIONS;
+    const parsed = JSON.parse(saved);
+    // merge: keep any new fields not in saved order
+    return parsed;
+  } catch { return DEFAULT_SECTIONS; }
+}
+
+function FieldOrderEditor() {
+  const [sections, setSections] = useState(() => loadFieldOrder());
+  const [saved, setSaved] = useState(false);
+  const dragItem = useRef(null);
+  const dragOver = useRef(null);
+  const dragFieldItem = useRef(null);
+  const dragFieldOver = useRef(null);
+  const dragFieldSection = useRef(null);
+
+  const handleSectionDragStart = (i) => { dragItem.current = i; };
+  const handleSectionDragEnter = (i) => { dragOver.current = i; };
+  const handleSectionDrop = () => {
+    if (dragItem.current === null || dragOver.current === null) return;
+    const updated = [...sections];
+    const [moved] = updated.splice(dragItem.current, 1);
+    updated.splice(dragOver.current, 0, moved);
+    dragItem.current = null; dragOver.current = null;
+    setSections(updated); setSaved(false);
+  };
+
+  const handleFieldDragStart = (sectionIdx, fieldIdx) => {
+    dragFieldSection.current = sectionIdx;
+    dragFieldItem.current = fieldIdx;
+  };
+  const handleFieldDragEnter = (fieldIdx) => { dragFieldOver.current = fieldIdx; };
+  const handleFieldDrop = (sectionIdx) => {
+    if (dragFieldItem.current === null || dragFieldOver.current === null) return;
+    if (dragFieldSection.current !== sectionIdx) return;
+    const updated = sections.map((sec, si) => {
+      if (si !== sectionIdx) return sec;
+      const fields = [...sec.fields];
+      const [moved] = fields.splice(dragFieldItem.current, 1);
+      fields.splice(dragFieldOver.current, 0, moved);
+      return { ...sec, fields };
+    });
+    dragFieldItem.current = null; dragFieldOver.current = null; dragFieldSection.current = null;
+    setSections(updated); setSaved(false);
+  };
+
+  const toggleRequired = (si, fi) => {
+    setSections(prev => prev.map((sec, s) => {
+      if (s !== si) return sec;
+      return {
+        ...sec,
+        fields: sec.fields.map((f, i) => i === fi ? { ...f, required: !f.required } : f),
+      };
+    }));
+    setSaved(false);
+  };
+
+  const handleSave = () => {
+    localStorage.setItem(FIELD_ORDER_KEY, JSON.stringify(sections));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleReset = () => {
+    localStorage.removeItem(FIELD_ORDER_KEY);
+    setSections(DEFAULT_SECTIONS);
+    setSaved(false);
+  };
+
+  return (
+    <div style={s.card}>
+      <div style={s.cardHeader}>
+        <span style={s.cardTitle}>Field Order</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {saved && <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>Saved!</span>}
+          <button onClick={handleReset} style={{ ...s.cancelBtn, fontSize: 12 }}>Reset</button>
+          <button onClick={handleSave} style={{ ...s.saveBtn, fontSize: 12 }}>Save Order</button>
+        </div>
+      </div>
+      <div style={{ padding: '10px 16px', fontSize: 12, color: 'var(--subtle)', borderBottom: '1px solid var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>Drag sections and fields to reorder. Toggle the badge to mark a field as mandatory.</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' }}>M</span>
+            Mandatory
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--subtle)', border: '1px solid var(--border)' }}>O</span>
+            Optional
+          </span>
+        </span>
+      </div>
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {sections.map((section, si) => (
+          <div
+            key={section.key}
+            draggable
+            onDragStart={() => handleSectionDragStart(si)}
+            onDragEnter={() => handleSectionDragEnter(si)}
+            onDragEnd={handleSectionDrop}
+            onDragOver={e => e.preventDefault()}
+            style={{ border: `1.5px solid ${section.color}22`, borderRadius: 10, background: 'var(--surface)', overflow: 'hidden', cursor: 'grab' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: `${section.color}12`, borderBottom: `1px solid ${section.color}22` }}>
+              <span style={{ color: 'var(--subtle)', fontSize: 14 }}>⠿</span>
+              <span style={{ fontWeight: 700, fontSize: 13, color: section.color }}>{section.label}</span>
+              <span style={{ fontSize: 11, color: 'var(--subtle)', marginLeft: 'auto' }}>
+                {section.fields.filter(f => f.required).length} mandatory · {section.fields.length} total
+              </span>
+            </div>
+            <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {section.fields.map((field, fi) => (
+                <div
+                  key={field.key}
+                  draggable
+                  onDragStart={e => { e.stopPropagation(); handleFieldDragStart(si, fi); }}
+                  onDragEnter={() => handleFieldDragEnter(fi)}
+                  onDragEnd={() => handleFieldDrop(si)}
+                  onDragOver={e => e.preventDefault()}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, background: 'var(--surface2)', cursor: 'grab', fontSize: 13, color: 'var(--text)', border: `1px solid ${field.required ? '#fca5a5' : 'var(--border)'}`, background: field.required ? '#fff8f8' : 'var(--surface2)' }}
+                >
+                  <span style={{ color: 'var(--subtle)', fontSize: 12, flexShrink: 0 }}>⠿</span>
+                  <span style={{ flex: 1 }}>{field.label}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); toggleRequired(si, fi); }}
+                    title={field.required ? 'Click to make optional' : 'Click to make mandatory'}
+                    style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, cursor: 'pointer',
+                      border: field.required ? '1px solid #fca5a5' : '1px solid var(--border)',
+                      background: field.required ? '#fef2f2' : 'var(--surface)',
+                      color: field.required ? '#dc2626' : 'var(--subtle)',
+                      transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >
+                    {field.required ? 'Mandatory' : 'Optional'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 export default function OptionsPage() {
   const [mainTab, setMainTab]   = useState('car-info');
   const [carInfoTab, setCarInfoTab] = useState('makes');
@@ -485,6 +711,15 @@ export default function OptionsPage() {
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+    },
+    {
+      key: 'field-order', label: 'Field Order', color: '#7c3aed',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
         </svg>
       ),
     },
@@ -550,6 +785,8 @@ export default function OptionsPage() {
               )}
             </>
           )}
+
+          {mainTab === 'field-order' && <FieldOrderEditor />}
         </div>
       </div>
     </div>

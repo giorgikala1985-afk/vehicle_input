@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { loadFieldOrder } from './OptionsPage';
 import {
   FaHashtag, FaCalendarAlt, FaCar, FaSitemap, FaTruck,
   FaBarcode, FaMapMarkerAlt, FaGavel, FaBoxOpen,
@@ -116,29 +117,32 @@ export default function VehicleForm() {
     </div>
   );
 
-  const field = (label, name, type = 'text', Icon = null) => (
+  const field = (label, name, type = 'text', Icon = null, required = false) => (
     <div style={st.field}>
       <label style={st.label}>
         {Icon && <Icon style={st.labelIcon} />}
         {label}
+        {required && <span style={{ color: '#dc2626', marginLeft: 2 }}>*</span>}
       </label>
       <input
-        style={st.input}
+        style={{ ...st.input, borderColor: required ? '#fca5a580' : undefined }}
         type={type}
         name={name}
         value={form[name]}
         onChange={handleChange}
+        required={required}
       />
     </div>
   );
 
-  const dropdown = (label, name, options, Icon = null) => (
+  const dropdown = (label, name, options, Icon = null, required = false) => (
     <div style={st.field}>
       <label style={st.label}>
         {Icon && <Icon style={st.labelIcon} />}
         {label}
+        {required && <span style={{ color: '#dc2626', marginLeft: 2 }}>*</span>}
       </label>
-      <select style={st.input} name={name} value={form[name]} onChange={handleChange}>
+      <select style={{ ...st.input, borderColor: required ? '#fca5a580' : undefined }} name={name} value={form[name]} onChange={handleChange} required={required}>
         <option value="">-- Select --</option>
         {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
@@ -168,63 +172,64 @@ export default function VehicleForm() {
         </h2>
         <form onSubmit={handleSubmit}>
 
-          <Section title="Vehicle Info" color="#4f46e5">
-            {field('Stock', 'stock', 'text', FaHashtag)}
-            {field('Year', 'year', 'number', FaCalendarAlt)}
-            {searchableDropdown('Make', 'make', makes.map(m => m.name), FaCar, () => setForm(f => ({ ...f, model: '' })))}
-            {searchableDropdown('Model', 'model', models.map(m => m.name), FaSitemap)}
-            {searchableDropdown('Body', 'body', bodies.map(b => b.name), FaTruck)}
-            {field('VIN', 'vin', 'text', FaBarcode)}
-            {field('Lot', 'lot', 'text', FaMapMarkerAlt)}
-            {dropdown('Auc.', 'auction', ['Copart', 'IAAI'], FaGavel)}
-            {dropdown('Product Type', 'product_type', ['eBay Dismantling', 'Export'], FaBoxOpen)}
-          </Section>
-
-          <Section title="Auc. Payment" color="#0891b2">
-            {field('Auc Won Date', 'auc_won_date', 'date', FaCalendarCheck)}
-            {field('Payment Due Date', 'payment_due_date', 'date', FaCalendarTimes)}
-            {field('Auc. Due', 'auction_due', 'date', FaClock)}
-            {field('Storage', 'storage', 'number', FaWarehouse)}
-            {field('Auc. Invoice (Initial)', 'auction_invoice_initial', 'number', FaDollarSign)}
-            {field('Auc. Invoice (Actual)', 'auction_invoice_actual', 'number', FaDollarSign)}
-            {field('Auc. Payment Amount', 'auction_payment_amount', 'number', FaDollarSign)}
-            {field('Auc. Payment Date', 'auction_payment_date', 'date', FaCalendarCheck)}
-            {field('Auc. Additional Charges', 'auction_additional_charges', 'number', FaDollarSign)}
-            {field('Other Services', 'other_services', 'number', FaDollarSign)}
-            {dropdown('Auc. Payment Status', 'auction_payment_status', ['Pending', 'Paid', 'Overdue'], FaCheckCircle)}
-          </Section>
-
-          <Section title="Cust." color="#059669">
-            {field('Cust.', 'customer', 'text', FaUser)}
-            {field('Cust. Payment Date', 'customer_payment_date', 'date', FaCalendarCheck)}
-            {field('Cust. Payment Amount', 'customer_payment_amount', 'number', FaDollarSign)}
-            {dropdown('Cash Received', 'cash_received', ['USA', 'GEORGIA'], FaDollarSign)}
-            {field('Cust. Due Date - Auc.', 'customer_due_date_auction', 'date', FaCalendarTimes)}
-            {field('Cust. Due Date - Transp.', 'customer_due_date_transportation', 'date', FaCalendarTimes)}
-            {field('Cust. Due - Auc.', 'customer_due_auction', 'number', FaDollarSign)}
-            {field('Cust. Due - Transp.', 'customer_due_transportation', 'number', FaDollarSign)}
-            {field('Cust. Due - Insurance', 'customer_due_insurance', 'number', FaDollarSign)}
-          </Section>
-
-          <Section title="Transp." color="#d97706">
-            {field('Local Transp. Amount', 'local_transportation_amount', 'number', FaDollarSign)}
-            {field('Local Transp. Due Date', 'local_transportation_due_date', 'date', FaCalendarTimes)}
-            {field('Local Transp. Payment Date', 'local_transportation_payment_date', 'date', FaCalendarCheck)}
-            {field('Transp. Sales Amount', 'transportation_sales_amount', 'number', FaShippingFast)}
-            {field('Transp. Sales Due Date (by customer)', 'transportation_sales_due_date', 'date', FaCalendarTimes)}
-            {field('Ocean Freight', 'ocean_freight', 'number', FaDollarSign)}
-            {field('TCH', 'tch', 'number', FaDollarSign)}
-          </Section>
-
-          <Section title="ხალხის გაბითურება ფასებით" color="#7c3aed">
-            {field('Car Invoice Cost', 'price_car_invoice_cost', 'number', FaDollarSign)}
-            {field('Car Price', 'price_car_price', 'number', FaDollarSign)}
-            {field('Client Price', 'price_client_price', 'number', FaDollarSign)}
-            {field('Transport Base Price', 'price_transport_base', 'number', FaDollarSign)}
-            {form.product_type === 'Export' && priceGroup('Dealer', 'price_dealer', 'price_dealer_additional', 'price_dealer_invoice_additional', dealers.map(d => d.name), dealers)}
-            {form.product_type === 'Export' && priceGroup('Sub-dealer', 'price_sub_dealer', 'price_sub_dealer_additional', 'price_sub_dealer_invoice_additional', subDealers.map(d => d.name))}
-            {form.product_type === 'Export' && priceGroup('Dealer Jr.', 'price_dealer_jr', 'price_dealer_jr_additional', 'price_dealer_jr_invoice_additional', dealerJrs.map(d => d.name))}
-          </Section>
+          {loadFieldOrder().map(section => {
+            const renderField = (f) => {
+              const req = !!f.required;
+              switch (f.key) {
+                case 'stock':    return field('Stock', 'stock', 'text', FaHashtag, req);
+                case 'year':     return field('Year', 'year', 'number', FaCalendarAlt, req);
+                case 'make':     return searchableDropdown('Make', 'make', makes.map(m => m.name), FaCar, () => setForm(fv => ({ ...fv, model: '' })));
+                case 'model':    return searchableDropdown('Model', 'model', models.map(m => m.name), FaSitemap);
+                case 'body':     return searchableDropdown('Body', 'body', bodies.map(b => b.name), FaTruck);
+                case 'vin':      return field('VIN', 'vin', 'text', FaBarcode, req);
+                case 'lot':      return field('Lot', 'lot', 'text', FaMapMarkerAlt, req);
+                case 'auction':  return dropdown('Auc.', 'auction', ['Copart', 'IAAI'], FaGavel, req);
+                case 'product_type': return dropdown('Product Type', 'product_type', ['eBay Dismantling', 'Export'], FaBoxOpen, req);
+                case 'auc_won_date': return field('Auc Won Date', 'auc_won_date', 'date', FaCalendarCheck, req);
+                case 'payment_due_date': return field('Payment Due Date', 'payment_due_date', 'date', FaCalendarTimes, req);
+                case 'auction_due': return field('Auc. Due', 'auction_due', 'date', FaClock, req);
+                case 'storage':  return field('Storage', 'storage', 'number', FaWarehouse, req);
+                case 'auction_invoice_initial': return field('Auc. Invoice (Initial)', 'auction_invoice_initial', 'number', FaDollarSign, req);
+                case 'auction_invoice_actual':  return field('Auc. Invoice (Actual)', 'auction_invoice_actual', 'number', FaDollarSign, req);
+                case 'auction_payment_amount':  return field('Auc. Payment Amount', 'auction_payment_amount', 'number', FaDollarSign, req);
+                case 'auction_payment_date':    return field('Auc. Payment Date', 'auction_payment_date', 'date', FaCalendarCheck, req);
+                case 'auction_additional_charges': return field('Auc. Additional Charges', 'auction_additional_charges', 'number', FaDollarSign, req);
+                case 'other_services': return field('Other Services', 'other_services', 'number', FaDollarSign, req);
+                case 'auction_payment_status':  return dropdown('Auc. Payment Status', 'auction_payment_status', ['Pending', 'Paid', 'Overdue'], FaCheckCircle, req);
+                case 'customer': return field('Cust.', 'customer', 'text', FaUser, req);
+                case 'customer_payment_date':   return field('Cust. Payment Date', 'customer_payment_date', 'date', FaCalendarCheck, req);
+                case 'customer_payment_amount': return field('Cust. Payment Amount', 'customer_payment_amount', 'number', FaDollarSign, req);
+                case 'cash_received': return dropdown('Cash Received', 'cash_received', ['USA', 'GEORGIA'], FaDollarSign, req);
+                case 'customer_due_date_auction': return field('Cust. Due Date - Auc.', 'customer_due_date_auction', 'date', FaCalendarTimes, req);
+                case 'customer_due_date_transportation': return field('Cust. Due Date - Transp.', 'customer_due_date_transportation', 'date', FaCalendarTimes, req);
+                case 'customer_due_auction': return field('Cust. Due - Auc.', 'customer_due_auction', 'number', FaDollarSign, req);
+                case 'customer_due_transportation': return field('Cust. Due - Transp.', 'customer_due_transportation', 'number', FaDollarSign, req);
+                case 'customer_due_insurance': return field('Cust. Due - Insurance', 'customer_due_insurance', 'number', FaDollarSign, req);
+                case 'local_transportation_amount': return field('Local Transp. Amount', 'local_transportation_amount', 'number', FaDollarSign, req);
+                case 'local_transportation_due_date': return field('Local Transp. Due Date', 'local_transportation_due_date', 'date', FaCalendarTimes, req);
+                case 'local_transportation_payment_date': return field('Local Transp. Payment Date', 'local_transportation_payment_date', 'date', FaCalendarCheck, req);
+                case 'transportation_sales_amount': return field('Transp. Sales Amount', 'transportation_sales_amount', 'number', FaShippingFast, req);
+                case 'transportation_sales_due_date': return field('Transp. Sales Due Date', 'transportation_sales_due_date', 'date', FaCalendarTimes, req);
+                case 'ocean_freight': return field('Ocean Freight', 'ocean_freight', 'number', FaDollarSign, req);
+                case 'tch':      return field('TCH', 'tch', 'number', FaDollarSign, req);
+                case 'price_car_invoice_cost': return field('Car Invoice Cost', 'price_car_invoice_cost', 'number', FaDollarSign, req);
+                case 'price_car_price':   return field('Car Price', 'price_car_price', 'number', FaDollarSign, req);
+                case 'price_client_price': return field('Client Price', 'price_client_price', 'number', FaDollarSign, req);
+                case 'price_transport_base': return field('Transport Base Price', 'price_transport_base', 'number', FaDollarSign, req);
+                case 'price_dealer':     return form.product_type === 'Export' ? priceGroup('Dealer', 'price_dealer', 'price_dealer_additional', 'price_dealer_invoice_additional', dealers.map(d => d.name), dealers) : null;
+                case 'price_sub_dealer': return form.product_type === 'Export' ? priceGroup('Sub-dealer', 'price_sub_dealer', 'price_sub_dealer_additional', 'price_sub_dealer_invoice_additional', subDealers.map(d => d.name)) : null;
+                case 'price_dealer_jr':  return form.product_type === 'Export' ? priceGroup('Dealer Jr.', 'price_dealer_jr', 'price_dealer_jr_additional', 'price_dealer_jr_invoice_additional', dealerJrs.map(d => d.name)) : null;
+                default: return null;
+              }
+            };
+            return (
+              <Section key={section.key} title={section.label} color={section.color}>
+                {section.fields.map(f => (
+                  <div key={f.key}>{renderField(f)}</div>
+                ))}
+              </Section>
+            );
+          })}
 
           {status && status !== 'success' && (
             <p style={st.error}>{status}</p>
