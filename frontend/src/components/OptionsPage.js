@@ -663,7 +663,7 @@ function FieldOrderEditor() {
                   onDragEnter={() => handleFieldDragEnter(fi)}
                   onDragEnd={() => handleFieldDrop(si)}
                   onDragOver={e => e.preventDefault()}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, background: 'var(--surface2)', cursor: 'grab', fontSize: 13, color: 'var(--text)', border: `1px solid ${field.required ? '#fca5a5' : 'var(--border)'}`, background: field.required ? '#fff8f8' : 'var(--surface2)' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, background: field.required ? '#fff8f8' : 'var(--surface2)', cursor: 'grab', fontSize: 13, color: 'var(--text)', border: `1px solid ${field.required ? '#fca5a5' : 'var(--border)'}` }}
                 >
                   <span style={{ color: 'var(--subtle)', fontSize: 12, flexShrink: 0 }}>⠿</span>
                   <span style={{ flex: 1 }}>{field.label}</span>
